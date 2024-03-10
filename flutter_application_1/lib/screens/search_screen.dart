@@ -1,10 +1,10 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/constants.dart';
 import 'package:flutter_application_1/models/movie.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_application_1/screens/details_screen.dart';
+
 class SearchScreen extends StatefulWidget {
   @override
   _SearchScreenState createState() => _SearchScreenState();
@@ -32,16 +32,16 @@ class _SearchScreenState extends State<SearchScreen> {
 
     final response = await http.get(
       Uri.parse(
-        'https://api.themoviedb.org/3/search/movie?query=$query&api_key=${Constants.apiKey}',
+        'https://api.themoviedb.org/3/search/multi?query=$query&api_key=${Constants.apiKey}',
       ),
     );
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
-      final List<dynamic> movies = data['results'] ?? [];
-      searchResults.addAll(movies.map((json) => Movie.fromJson(json)).toList());
+      final List<dynamic> results = data['results'] ?? [];
+      searchResults.addAll(results.map((json) => Movie.fromJson(json)).toList());
     } else {
-      throw Exception('Failed to search movies');
+      throw Exception('Failed to search movies, TV shows, and actors');
     }
 
     return searchResults;
@@ -54,24 +54,12 @@ class _SearchScreenState extends State<SearchScreen> {
         title: TextField(
           controller: _searchController,
           decoration: InputDecoration(
-            hintText: 'Search movies...',
-            suffixIcon: IconButton(
-              icon: Icon(Icons.search),
-              onPressed: () {
-                if (_searchController.text.isNotEmpty) {
-                  setState(() {
-                    _searchResults = _searchMovies(_searchController.text);
-                  });
-                }
-              },
-            ),
+            hintText: 'Search movies, TV shows, or actors...',
           ),
-          onSubmitted: (value) {
-            if (value.isNotEmpty) {
-              setState(() {
-                _searchResults = _searchMovies(value);
-              });
-            }
+          onChanged: (query) {
+            setState(() {
+              _searchResults = _searchMovies(query);
+            });
           },
         ),
       ),

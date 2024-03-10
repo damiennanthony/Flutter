@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_application_1/apicalls/apicalls.dart';
 import 'models/movie.dart';
 import 'widgets/movie_slider.dart';
-import 'widgets/trending_slider.dart'; 
+import 'widgets/trending_slider.dart';
 import 'package:flutter_application_1/screens/search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,6 +17,11 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Movie>> trendingMovies;
   late Future<List<Movie>> topRatedMovies;
   late Future<List<Movie>> upcomingMovies;
+  late Future<List<Movie>> bestMoviesThisYear;
+  late Future<List<Movie>> highestGrossingMovies;
+  late Future<List<Movie>> childrenFriendlyMovies;
+  late Future<List<Movie>> popularTvShows;
+
 
   @override
   void initState() {
@@ -24,6 +29,12 @@ class _HomeScreenState extends State<HomeScreen> {
     trendingMovies = Api().getTrendingMovies();
     topRatedMovies = Api().getTopRatedMovies();
     upcomingMovies = Api().getUpcomingMovies();
+    bestMoviesThisYear = Api().getBestMoviesThisYear();
+    highestGrossingMovies = Api().getHighestGrossingMovies();
+    childrenFriendlyMovies = Api().getChildrenFriendlyMovies();
+    popularTvShows = Api().getPopularTvShows();
+
+    
   }
 
   @override
@@ -35,24 +46,29 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/moviepal.png',
-              fit: BoxFit.cover,
-              height: 40, // Adjust the height as needed
-              filterQuality: FilterQuality.high,
-            ),
-            IconButton(
-              icon: Icon(Icons.search),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SearchScreen()),
-                );
-              },
+            Expanded(
+              child: Center(
+                child: Image.asset(
+                  'assets/moviepal.png',
+                  fit: BoxFit.cover,
+                  height: 40, 
+                  filterQuality: FilterQuality.high,
+                ),
+              ),
             ),
           ],
         ),
-        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SearchScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -117,6 +133,102 @@ class _HomeScreenState extends State<HomeScreen> {
               SizedBox(
                 child: FutureBuilder(
                   future: upcomingMovies,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(snapshot.error.toString()),
+                      );
+                    } else if (snapshot.hasData) {
+                      return MovieSlider(snapshot: snapshot);
+                    } else {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Best Movies This Year', 
+                style: GoogleFonts.aBeeZee(
+                  fontSize: 25,
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                child: FutureBuilder(
+                  future: bestMoviesThisYear, 
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(snapshot.error.toString()),
+                      );
+                    } else if (snapshot.hasData) {
+                      return MovieSlider(snapshot: snapshot);
+                    } else {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Highest Grossing Movies', 
+                style: GoogleFonts.aBeeZee(
+                  fontSize: 25,
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                child: FutureBuilder(
+                  future: highestGrossingMovies, 
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(snapshot.error.toString()),
+                      );
+                    } else if (snapshot.hasData) {
+                      return MovieSlider(snapshot: snapshot);
+                    } else {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Children Friendly Movies', 
+                style: GoogleFonts.aBeeZee(
+                  fontSize: 25,
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                child: FutureBuilder(
+                  future: childrenFriendlyMovies, 
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(snapshot.error.toString()),
+                      );
+                    } else if (snapshot.hasData) {
+                      return MovieSlider(snapshot: snapshot);
+                    } else {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Popular TV Shows', 
+                style: GoogleFonts.aBeeZee(
+                  fontSize: 25,
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                child: FutureBuilder(
+                  future: popularTvShows, 
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
                       return Center(
