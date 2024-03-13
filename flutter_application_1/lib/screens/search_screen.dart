@@ -27,21 +27,58 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  Future<List<Movie>> _searchMovies(String query) async {
+  Future<List<Movie>> _searchMoviesAndShows(String query) async {
     final List<Movie> searchResults = [];
 
-    final response = await http.get(
+    // Search movies by title
+    final movieResponse = await http.get(
       Uri.parse(
-        'https://api.themoviedb.org/3/search/multi?query=$query&api_key=${Constants.apiKey}',
+        'https://api.themoviedb.org/3/search/movie?query=$query&api_key=${Constants.apiKey}',
       ),
     );
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      final List<dynamic> results = data['results'] ?? [];
-      searchResults.addAll(results.map((json) => Movie.fromJson(json)).toList());
-    } else {
-      throw Exception('Failed to search movies, TV shows, and actors');
+    // Search TV shows by title
+    final tvShowResponse = await http.get(
+      Uri.parse(
+        'https://api.themoviedb.org/3/search/tv?query=$query&api_key=${Constants.apiKey}',
+      ),
+    );
+
+    // Search movies and TV shows by actor's name
+    final actorResponse = await http.get(
+      Uri.parse(
+        'https://api.themoviedb.org/3/search/person?query=$query&api_key=${Constants.apiKey}',
+      ),
+    );
+
+    if (movieResponse.statusCode == 200) {
+      final Map<String, dynamic> movieData = jsonDecode(movieResponse.body);
+      final List<dynamic> movieResults = movieData['results'] ?? [];
+      searchResults.addAll(movieResults.map((json) => Movie.fromJson(json)).toList());
+    }
+
+    if (tvShowResponse.statusCode == 200) {
+      final Map<String, dynamic> tvShowData = jsonDecode(tvShowResponse.body);
+      final List<dynamic> tvShowResults = tvShowData['results'] ?? [];
+      searchResults.addAll(tvShowResults.map((json) => Movie.fromJson(json)).toList());
+    }
+
+    if (actorResponse.statusCode == 200) {
+      final Map<String, dynamic> actorData = jsonDecode(actorResponse.body);
+      final List<dynamic> actorResults = actorData['results'] ?? [];
+      for (var actor in actorResults) {
+        final actorId = actor['id'];
+        final moviesResponse = await http.get(
+          Uri.parse(
+            'https://api.themoviedb.org/3/person/$actorId/movie_credits?api_key=${Constants.apiKey}',
+          ),
+        );
+        if (moviesResponse.statusCode == 200) {
+          final Map<String, dynamic> moviesData = jsonDecode(moviesResponse.body);
+          final List<dynamic> movies = moviesData['cast'] ?? [];
+          searchResults.addAll(movies.map((json) => Movie.fromJson(json)).toList());
+        }
+      }
     }
 
     return searchResults;
@@ -58,7 +95,7 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
           onChanged: (query) {
             setState(() {
-              _searchResults = _searchMovies(query);
+              _searchResults = _searchMoviesAndShows(query);
             });
           },
         ),

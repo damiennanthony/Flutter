@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/firebase/firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_application_1/colors.dart';
 import 'package:flutter_application_1/constants.dart';
@@ -122,12 +124,20 @@ class DetailsScreen extends StatelessWidget {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                                
                             ],
                           ),
-                        ), // Add a comma here
+                        ),
                       ],
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      String userId = FirebaseAuth.instance.currentUser?.uid ?? '' ;
+                      saveMovieDetailsToFirestore(userId, movie, 'watched');
+                      // Add your logic to mark the movie as watched
+                    },
+                    child: Text('Mark as Watched'),
                   ),
                 ],
               ),
@@ -138,4 +148,3 @@ class DetailsScreen extends StatelessWidget {
     );
   }
 }
-

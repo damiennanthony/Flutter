@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screens/watchedscreen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_application_1/apicalls/apicalls.dart';
 import 'models/movie.dart';
@@ -51,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Image.asset(
                   'assets/moviepal.png',
                   fit: BoxFit.cover,
-                  height: 40, 
+                  height: 50, 
                   filterQuality: FilterQuality.high,
                 ),
               ),
@@ -246,6 +247,19 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => WatchedScreen()), // Navigate to WatchedScreen
+          );
+        },
+        label: Text('Watched Movies'), // Button label
+        icon: Icon(Icons.movie), // Button icon
+        backgroundColor: Colors.blue, // Button color
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    
     );
   }
 }
