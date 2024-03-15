@@ -91,7 +91,7 @@ class _SearchScreenState extends State<SearchScreen> {
         title: TextField(
           controller: _searchController,
           decoration: InputDecoration(
-            hintText: 'Search movies, TV shows, or actors...',
+            hintText: 'Search movies, by title or actors...🎬🍿',
           ),
           onChanged: (query) {
             setState(() {

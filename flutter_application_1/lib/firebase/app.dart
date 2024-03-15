@@ -9,7 +9,7 @@ class MyApp extends StatelessWidget {
      theme: ThemeData(
        primarySwatch: Colors.blue,
      ),
-     home: const AuthGate(),
+     home: const LoginPage(),
    );
  }
 }

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/firebase/firestore.dart';
@@ -7,13 +8,35 @@ import 'package:flutter_application_1/constants.dart';
 import 'package:flutter_application_1/models/movie.dart';
 import 'package:flutter_application_1/widgets/back_button.dart';
 
-class DetailsScreen extends StatelessWidget {
+class DetailsScreen extends StatefulWidget {
   const DetailsScreen({
     Key? key,
     required this.movie,
   }) : super(key: key);
 
   final Movie movie;
+
+  @override
+  _DetailsScreenState createState() => _DetailsScreenState();
+}
+
+class _DetailsScreenState extends State<DetailsScreen> {
+  late bool isWatched=false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Check if the movie is already marked as watched
+    checkIfWatched();
+  }
+
+  Future<void> checkIfWatched() async {
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    bool watched = await isMovieWatched(userId, widget.movie);
+    setState(() {
+      isWatched = watched;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +51,7 @@ class DetailsScreen extends StatelessWidget {
             floating: true,
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
-                movie.title,
+                widget.movie.title,
                 style: GoogleFonts.belleza(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
@@ -40,7 +63,7 @@ class DetailsScreen extends StatelessWidget {
                   bottomRight: Radius.circular(24),
                 ),
                 child: Image.network(
-                  '${Constants.imagePath}${movie.posterPath}',
+                  '${Constants.imagePath}${widget.movie.posterPath}',
                   filterQuality: FilterQuality.high,
                   fit: BoxFit.cover,
                 ),
@@ -61,7 +84,7 @@ class DetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    movie.overView, 
+                    widget.movie.overView,
                     style: GoogleFonts.roboto(
                       fontSize: 25,
                       fontWeight: FontWeight.w400,
@@ -89,7 +112,7 @@ class DetailsScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                movie.releaseDate,
+                                widget.movie.releaseDate,
                                 style: GoogleFonts.roboto(
                                   fontSize: 17,
                                   fontWeight: FontWeight.bold,
@@ -107,7 +130,7 @@ class DetailsScreen extends StatelessWidget {
                           child: Row(
                             children: [
                               Text(
-                                'Rating:' ,
+                                'Rating:',
                                 style: GoogleFonts.roboto(
                                   fontSize: 17,
                                   fontWeight: FontWeight.bold,
@@ -118,7 +141,7 @@ class DetailsScreen extends StatelessWidget {
                                 color: Colors.amber,
                               ),
                               Text(
-                                '${movie.voteAverage.toStringAsFixed(1)}/10' ,
+                                '${widget.movie.voteAverage.toStringAsFixed(1)}/10',
                                 style: GoogleFonts.roboto(
                                   fontSize: 17,
                                   fontWeight: FontWeight.bold,
@@ -132,12 +155,21 @@ class DetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () {
-                      String userId = FirebaseAuth.instance.currentUser?.uid ?? '' ;
-                      saveMovieDetailsToFirestore(userId, movie, 'watched');
-                      // Add your logic to mark the movie as watched
+                    onPressed: () async {
+                      String userId =
+                          FirebaseAuth.instance.currentUser?.uid ?? '';
+                      if (isWatched) {
+                        await removeMovieFromWatched(userId, widget.movie);
+                      } else {
+                        await saveMovieDetailsToFirestore(
+                            userId, widget.movie, 'watched');
+                      }
+                      // Toggle isWatched state
+                      setState(() {
+                        isWatched = !isWatched;
+                      });
                     },
-                    child: Text('Mark as Watched'),
+                    child: Text(isWatched ? 'Remove from Watched' : 'Mark as Watched'),
                   ),
                 ],
               ),
@@ -146,5 +178,38 @@ class DetailsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+Future<bool> isMovieWatched(String userId, Movie movie) async {
+  try {
+    DocumentSnapshot<Map<String, dynamic>> movieDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('watched')
+        .where('id', isEqualTo: movie.id)
+        .get()
+        .then((snapshot) => snapshot.docs.first);
+
+    return movieDoc.exists;
+  } catch (e) {
+    print('Error checking if movie is watched: $e');
+    return false;
+  }
+}
+
+Future<void> removeMovieFromWatched(String userId, Movie movie) async {
+  try {
+    QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('watched')
+        .where('id', isEqualTo: movie.id)
+        .get();
+    for (DocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+      await doc.reference.delete();
+    }
+  } catch (e) {
+    print('Error removing movie from watched: $e');
   }
 }

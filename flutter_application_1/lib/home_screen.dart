@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application_1/screens/watchedscreen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_application_1/apicalls/apicalls.dart';
-import 'models/movie.dart';
-import 'widgets/movie_slider.dart';
-import 'widgets/trending_slider.dart';
+import 'package:flutter_application_1/models/movie.dart';
+import 'package:flutter_application_1/widgets/movie_slider.dart';
+import 'package:flutter_application_1/widgets/trending_slider.dart';
 import 'package:flutter_application_1/screens/search_screen.dart';
+import 'package:flutter_application_1/firebase/auth_gate.dart'; // Import your login screen
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -23,7 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Movie>> childrenFriendlyMovies;
   late Future<List<Movie>> popularTvShows;
 
-
   @override
   void initState() {
     super.initState();
@@ -34,32 +36,46 @@ class _HomeScreenState extends State<HomeScreen> {
     highestGrossingMovies = Api().getHighestGrossingMovies();
     childrenFriendlyMovies = Api().getChildrenFriendlyMovies();
     popularTvShows = Api().getPopularTvShows();
+  }
 
-    
+  // Function to sign out the user
+  Future<void> _signOut() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+
+      // If Remember Me was selected, set it to false
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      bool rememberMe = prefs.getBool('rememberMe') ?? false;
+      if (rememberMe) {
+        prefs.setBool('rememberMe', false);
+      }
+
+      // Navigate back to the login screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+      );
+    } catch (e) {
+      print('Failed to sign out: $e');
+      // Handle sign-out failure (e.g., show error message)
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: const Center(child: Text('MoviePal🎥')),
+        titleTextStyle: const TextStyle(color: Colors.cyan, fontSize: 35, fontStyle: FontStyle.normal, fontWeight: FontWeight.bold),
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Center(
-                child: Image.asset(
-                  'assets/moviepal.png',
-                  fit: BoxFit.cover,
-                  height: 50, 
-                  filterQuality: FilterQuality.high,
-                ),
-              ),
-            ),
-          ],
-        ),
         actions: [
+          // Sign-out button
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () {
+              _signOut(); // Call the sign-out function when the button is pressed
+            },
+          ),
           IconButton(
             icon: Icon(Icons.search),
             onPressed: () {
@@ -251,15 +267,14 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => WatchedScreen()), // Navigate to WatchedScreen
+            MaterialPageRoute(builder: (context) => WatchedScreen()),
           );
         },
-        label: Text('Watched Movies'), // Button label
-        icon: Icon(Icons.movie), // Button icon
-        backgroundColor: Colors.blue, // Button color
+        label: Text('Watched Movies'),
+        icon: Icon(Icons.movie),
+        backgroundColor: Colors.blue,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-    
     );
   }
 }
